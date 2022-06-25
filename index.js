@@ -1,54 +1,75 @@
-// Your code here
-function createEmployeeRecord(employee){
-    return {
-        firstName :employee[0],
-        familyName :employee[1],
-        title :employee[2],
-        payPerHour:employee[3],
+function createEmployeeRecord(array){
+    let employeeRecord = {
+        firstName : array[0],
+        familyName : array[1],
+        title : array[2],
+        payPerHour : array[3],
         timeInEvents : [],
-        timeOutEvents :[]
+        timeOutEvents : [] 
     }
+    return employeeRecord;
 }
+
 function createEmployeeRecords(records){
-    return records.map(worker=>createEmployeeRecord(worker))
-
+    let employeeRecords = records.map(record => createEmployeeRecord(record))
+    return employeeRecords
 }
-function createTimeInEvent(array,dateObj){
-    let year = dateObj.slice(0,10);
-    let hour = dateObj.slice(-4)
-    const time ={
-        type:"TimeIn",
-        date :year,
-        hour:parseInt(hour)
-    }
-    let updateRecord = createEmployeeRecord(array);
-    updateRecord.timeInEvents.push(time)
 
-    return updateRecord;
+function createTimeInEvent(empRec, dateStamp){
+    let [date, hour] = dateStamp.split(' ')
 
-}
-function createTimeOutEvent(employee,dateObj){
-    let year = dateObj.slice(0,10);
-    let hour = dateObj.slice(-4)
-    employee.timeOutEvents.push({
-        type:"TimeOut",
-        date :year,
-        hour:parseInt(hour)
-    })
-    
-
-    return employee;
-
-}
-const hoursWorkedOnDate = (employee, findDate) => {
-    let setDate = employee.timeInEvents.find(variab => {
-        return variab.date === findDate
-    })
-    let outDate = employee.timeInEvents.find(variable=> {
-        return variable.date === findDate
+    empRec.timeInEvents.push({
+        type : "TimeIn",
+        hour: parseInt(hour,10),
+        date,
     })
 
-    return (outDate.hour - setDate.hour) / 100
-  }
+    return empRec
+}
 
+function createTimeOutEvent(empRec, dateStamp){
+    let [date, hour] = dateStamp.split(' ')
 
+    empRec.timeOutEvents.push({
+        type: "TimeOut",
+        hour : parseInt(hour, 10),
+        date
+    })
+
+    return empRec
+}
+
+function hoursWorkedOnDate(employee, workDate){
+    let inTheEvent = employee.timeInEvents.find((e)=>{
+        return e.date === workDate
+    })
+
+    let outOfTheEvent = employee.timeOutEvents.find((e)=>{
+        return e.date === workDate
+    })
+
+    return (outOfTheEvent.hour - inTheEvent.hour) / 100
+}
+
+function wagesEarnedOnDate(employee, dateWork){
+    let wageEarned = hoursWorkedOnDate(employee, dateWork) * employee.payPerHour
+    return parseFloat(wageEarned.toString())
+}
+
+function allWagesFor(employee){
+    let eligbleDates = employee.timeInEvents.map((e)=>{
+        return e.date
+    })
+
+    let payable = eligbleDates.reduce((memo, d)=>{
+        return memo + wagesEarnedOnDate(employee,d)
+    }, 0)
+
+    return payable
+}
+
+function calculatePayroll(arrayOfEmployeeRecords){
+    return arrayOfEmployeeRecords.reduce((memo, rec)=>{
+        return memo + allWagesFor(rec)
+    }, 0)
+} 
